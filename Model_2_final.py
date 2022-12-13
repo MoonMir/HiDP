@@ -15,7 +15,7 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import roc_curve
 
 from sklearn import svm
-from sklearn.svm import SVM
+from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -24,7 +24,7 @@ from xgboost import XGBClassifier
 from xgboost import XGBRegressor
 from xgboost import plot_importance
 
-df = pd.read_excel('model1_final merge_lab실수_imputation.xlsx')
+df = pd.read_excel('model2_final merge_lab실수_imputation.xlsx')
 df.head()
 df.info()
 df.isnull().sum()
@@ -50,7 +50,7 @@ x_test = scaler.transform(x_test)
 x_test
 y_train.sum()
 
-# SVM Model
+# SVM Model (SVC=분류classification용 SVM, SVC라고 부르기도 한다)
 from sklearn.svm import SVC
 svm = SVC(kernel='rbf', C=8, gamma=0.1)
 svm.fit(x_train, y_train) # SVM 분류 모델 훈련
@@ -73,6 +73,87 @@ print('F1-Score:')
 print(metrics.f1_score(y_test, y_pred))
 print('AUROC')
 print(metrics.roc_auc_score(y_test, y_pred))
+
+from sklearn import metrics
+matrix = metrics.confusion_matrix(y_test, y_pred)
+print(matrix)
+report = metrics.classification_report(y_test, y_pred)
+print(report)
+
+# Decission Tree
+from sklearn import tree
+DT_model = tree.DecisionTreeClassifier(criterion='entropy', max_depth=5)
+DT_model.fit(x_train, y_train) # DT 분류모델 훈련
+y_pred = DT_model.predict(x_test) # 테스트셋으로 성능 확인
+
+print("예측된 라벨:", y_pred)
+print("ground-truth 라벨:", y_test)
+print("prediction accuracy: {:.2f}".format(np.mean(y_pred == y_test))) # 예측정확도
+
+# get_clf_eval: 모델 평가항목
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+metrics.confusion_matrix(y_test, y_pred)
+print('Accuracy Score:')
+print(metrics.accuracy_score(y_test, y_pred))
+print('precision Score:')
+print(metrics.precision_score(y_test, y_pred))
+print('Recall Score:')
+print(metrics.recall_score(y_test, y_pred))
+print('F1-Score:')
+print(metrics.f1_score(y_test, y_pred))
+print('AUROC')
+print(metrics.roc_auc_score(y_test, y_pred))
+
+from sklearn import metrics
+matrix = metrics.confusion_matrix(y_test, y_pred)
+print(matrix)
+report = metrics.classification_report(y_test, y_pred)
+print(report)
+
+# KNN(K-Nearest Neighbors)분류 모델
+from sklearn.neighbors import KNeighborsClassifier
+knn = KNeighborsClassifier(n_neighbors=1)
+knn.fit(x_train, y_train) # KNN 분류기를 훈련셋으로 훈련
+y_pred = knn.predict(x_test) # 테스트 셋으로 성능확인
+
+print("예측된 라벨:", y_pred)
+print("ground-truth 라벨:", y_test)
+print("prediction accuracy: {:.2f}".format(np.mean(y_pred == y_test))) # 예측정확도
+
+# get_clf_eval: 모델 평가항목
+from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+metrics.confusion_matrix(y_test, y_pred)
+print('Accuracy Score:')
+print(metrics.accuracy_score(y_test, y_pred))
+print('precision Score:')
+print(metrics.precision_score(y_test, y_pred))
+print('Recall Score:')
+print(metrics.recall_score(y_test, y_pred))
+print('F1-Score:')
+print(metrics.f1_score(y_test, y_pred))
+print('AUROC')
+print(metrics.roc_auc_score(y_test, y_pred))
+
+from sklearn import metrics
+matrix = metrics.confusion_matrix(y_test, y_pred)
+print(matrix)
+report = metrics.classification_report(y_test, y_pred)
+print(report)
+
+# CART
+# 1. Gini 계수를 구하는 함수 만들기 (df(데이터), label(타겟변수명))
+from functools import reduce
+def get_gini(df, label):
+    D_len = df[label].count() # 데이터 전체 길이
+    # 각 클래스별 Count를 담은 Generator 생성
+    count_arr = (value for key, value in df[label].value_counts().items())
+    # reduce를 이용해 초기값 1에서 각 클래스 (count / D_len)^2 빼기
+    return reduce(lambda x, y: x - (y/D_len)**2 , count_arr,1)
+df['재입원']
+ 
+
+
+
 
 # Cross Validation
 from sklearn.cross_validation import train_test_split
@@ -345,91 +426,3 @@ def pipeline_nn(X_train, y_train):
 
 grid_search_nn = pipeline_nn(X_train, y_train)
 evaluation(grid_search_nn, X_test, y_test)
-
-
-
-# Decission Tree
-DT_model = DecisionTreeClassifier()
-DT_model.fit(x_train_sm, y_train_sm)
-DT_pred = DT_model.predict(x_test)
-DT_pred_proba = DT_model.predict_proba(x_test)[:,1]
-
-print('DecisionTreeClassifier: %.2f' % (metrics.accuracy_score(DT_pred, y_test) * 100))
-
-LR_model = LogisticRegression(solver='lbfgs', max_iter=2000)
-LR_model.fit(x_train_sm, y_train_sm)
-LR_pred = LR_model.predict(x_test)
-LR_pred_proba = LR_model.predict_proba(x_test)[:,1]
-
-print('LogisticRegression: %.2f' % (metrics.accuracy_score(LR_pred, y_test) * 100))
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-def get_clf_eval(y_test, pred=None, pred_proba=None):
-    confusion = confusion_matrix(y_test, pred)
-    accuracy = accuracy_score(y_test, pred)
-    precision = precision_score(y_test, pred)
-    recall = recall_score(y_test, pred)
-    AUC = roc_auc_score(y_test, pred_proba)
-    print('오차행렬 \n', confusion)
-    print('Accuracy: ', accuracy)
-    print('Precision: ', precision)
-    print('Recall: ', recall)
-    print('AUROC: ', AUC)
-
-get_clf_eval(y_test, pred)
-
-
-
-RF_model = RandomForestClassifier(n_estimators=100)
-RF_model.fit(x_train_sm, y_train_sm)
-RF_pred = RF_model.predict(x_test)
-RF_pred_proba = RF_model.predict_proba(x_test)[:,1]
-
-print('RandomForestClassifier: %.2f' % (metrics.accuracy_score(RF_pred, y_test) * 100))
-
-xgbc = XGBClassifier()
-xgbc.fit(x_train_sm, y_train_sm)
-xgbc_pred = xgbc.predict(x_test)
-xgbc_pred_proba = xgbc.predict_proba(x_test)[:,1]
-
-print('XGBClassifier: %.2f' % (metrics.accuracy_score(xgbc_pred, y_test) * 100))
-
-import matplotlib.pyplot as plt
-plot_importance(xgbc)
-plot.yticks(range(13), col_names)
-plt.show()
-
-models = {
-    'SVM_model': svm.SVC(gamma='scale'),
-    'DT_model': DecisionTreeClassifier(),
-    'LR_model': LogisticRegression(solver='lbfgs', max_iter=2000),
-    'RF_model': RandomForestClassifier(n_estimators=100),
-    'xgbc': XGBClassifier()
-}
-
-cv = KFold(n_splits=5, random_state=1)
-for name, model in models.items():
-    scores = cross_val_score(model, x_features, y_feature, cv=cv)
-    
-    print('%s: %.2f%%' % (name, np.mean(scores) * 100))
-
-
-svm = svm.SVC(gamma='scale')
-cv = KFold(n_splits=5, random_state=1)
-accs = cross_val_score(svm, data.x_features, y_feature, cv=cv)
-print(accs)
-
-def get_clf_eval(y_test, y_pred):
-    confusion = confusion_matrix(y_test, y_pred)
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred)
-    recall = recall_score(y_test, y_pred)
-    AUC = roc_auc_score(y_test, y_pred)
-    report = classification_report(y_test, y_pred)
-    print('오차행렬: ', confusion)
-    print('Accuracy: ', accuracy)
-    print('Precision: ', precision)
-    print('Recall: ', recall)
-    print('AUROC: ', AUC)
-    print(report)
-
-get_clf_eval(y_test, y_pred)
